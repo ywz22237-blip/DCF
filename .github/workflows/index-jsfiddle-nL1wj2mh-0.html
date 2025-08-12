@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSFiddle nL1wj2mh</title>
+
+  <style>
+    body {
+    background-color: #f4f7f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.title {
+    text-align: center;
+    color: #1a237e;
+    font-size: 2.2em;
+    font-weight: 700;
+}
+
+.description {
+    text-align: center;
+    color: #607d8b;
+    margin-bottom: 30px;
+    font-size: 1em;
+}
+
+.calculator-card {
+    border-top: 2px solid #e0e0e0;
+    padding-top: 20px;
+}
+
+.section-title {
+    font-size: 1.4em;
+    color: #3f51b5;
+    margin-bottom: 20px;
+    border-left: 4px solid #3f51b5;
+    padding-left: 10px;
+}
+
+.cash-flow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+.input-field:focus {
+    border-color: #3f51b5;
+    outline: none;
+}
+
+.calculate-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #4caf50;
+    color: white;
+    font-size: 1.2em;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.calculate-btn:hover {
+    background-color: #43a047;
+}
+
+.result-box {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #e8eaf6;
+    border-radius: 8px;
+    border: 1px solid #c5cae9;
+}
+
+.result-title {
+    font-size: 1.5em;
+    color: #1a237e;
+    border-bottom: 1px solid #9fa8da;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.result-label {
+    font-weight: 600;
+}
+
+.result-value {
+    font-weight: 600;
+    color: #333;
+}
+
+/* 동적으로 추가되는 현금흐름 입력 필드 */
+.cash-flow-input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.cash-flow-input-group label {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 5px;
+}.upload-btn {
+    background-color: #607d8b;
+}
+
+.upload-btn:hover {
+    background-color: #78909c;
+}
+
+/* readonly 상태의 입력 필드 스타일 */
+input[readonly] {
+    background-color: #eceff1;
+    cursor: not-allowed;
+}
+  </style>
+
+  
+</head>
+<body>
+  
+
+<link rel="stylesheet" href="style.css" />
+
+<div class="container">
+  <h1 class="title">DCF (현금흐름할인법) 계산기</h1>
+  <p class="description">재무제표를 첨부하여 기업 가치를 평가해 보세요.</p>
+
+  <div class="calculator-card">
+    <h2 class="section-title">재무제표 업로드</h2>
+    <div class="form-group">
+      <label for="financial-statement" class="label"
+        >재무제표 파일 (.csv)</label
+      >
+      <input
+        type="file"
+        id="financial-statement"
+        class="input-field"
+        accept=".csv"
+      />
+    </div>
+    <button
+      onclick="processFinancialStatement()"
+      class="calculate-btn upload-btn"
+    >
+      파일 업로드 및 분석
+    </button>
+  </div>
+
+  <div class="calculator-card mt-50">
+    <h2 class="section-title">현금흐름(FCF) 계산</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="operating-profit" class="label">영업이익</label>
+        <input
+          type="number"
+          id="operating-profit"
+          class="input-field"
+          value="0"
+          readonly
+        />
+      </div>
+      <div class="form-group">
+        <label for="depreciation" class="label">감가상각비</label>
+        <input
+          type="number"
+          id="depreciation"
+          class="input-field"
+          value="0"
+          readonly
+        />
+      </div>
+      <div class="form-group">
+        <label for="taxes" class="label">세금 (%)</label>
+        <input type="number" id="taxes" class="input-field" value="22" />
+      </div>
+      <div class="form-group">
+        <label for="capex" class="label">자본적지출</label>
+        <input
+          type="number"
+          id="capex"
+          class="input-field"
+          value="0"
+          readonly
+        />
+      </div>
+      <div class="form-group">
+        <label for="nwc" class="label">순운전자본 증가분</label>
+        <input type="number" id="nwc" class="input-field" value="0" readonly />
+      </div>
+    </div>
+    <button onclick="calculateFCF()" class="calculate-btn">FCF 계산</button>
+    <div id="fcf-result" class="result-box result-mini">
+      <h3 class="result-title">계산된 현금흐름 (FCF):</h3>
+      <span id="fcf-value" class="result-value">₩0</span>
+    </div>
+  </div>
+
+  <div class="calculator-card mt-50">
+    <h2 class="section-title">DCF 가정 입력</h2>
+    <div id="cash-flow-inputs" class="cash-flow-grid"></div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="wacc" class="label">WACC (%, 할인율)</label>
+        <input type="number" id="wacc" class="input-field" value="10" />
+      </div>
+      <div class="form-group">
+        <label for="growth-rate" class="label">영구성장률 (g, %)</label>
+        <input type="number" id="growth-rate" class="input-field" value="2" />
+      </div>
+      <div class="form-group">
+        <label for="shares" class="label">총 발행 주식수</label>
+        <input type="number" id="shares" class="input-field" value="1000000" />
+      </div>
+    </div>
+
+    <button onclick="calculateDCF()" class="calculate-btn">DCF 계산하기</button>
+
+    <div id="dcf-result" class="result-box">
+      <h3 class="result-title">평가 결과</h3>
+      <div class="result-item">
+        <span class="result-label">기업가치 (Enterprise Value):</span>
+        <span id="enterprise-value" class="result-value">₩0</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">주식 가치 (Equity Value):</span>
+        <span id="equity-value" class="result-value">₩0</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">주당 가치 (Per Share Value):</span>
+        <span id="per-share-value" class="result-value">₩0</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="script.js"></script>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const cashFlowInputsContainer = document.getElementById('cash-flow-inputs');
+    const numberOfYears = 5;
+
+    for (let i = 1; i <= numberOfYears; i++) {
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'cash-flow-input-group';
+        inputGroup.innerHTML = `
+            <label for="cf-${i}">예상 현금흐름 ${i}년차</label>
+            <input type="number" id="cf-${i}" class="input-field cash-flow-input" value="0">
+        `;
+        cashFlowInputsContainer.appendChild(inputGroup);
+    }
+});
+
+function processFinancialStatement() {
+    const fileInput = document.getElementById('financial-statement');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert("파일을 선택해 주세요.");
+        return;
+    }
+    
+    // 파일 리더 객체 생성
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const fileContent = event.target.result;
+        // CSV 데이터 파싱
+        const lines = fileContent.split('\n').map(line => line.trim());
+        
+        let operatingProfit = 0;
+        let depreciation = 0;
+        let capex = 0;
+        let nwc = 0;
+
+        // 예시 CSV 포맷을 기반으로 데이터 추출
+        // 가정: CSV 파일이 "항목,금액" 형식으로 되어 있음
+        // 예시:
+        // 영업이익,100000000
+        // 감가상각비,10000000
+        // 자본적지출,20000000
+        // 순운전자본,5000000
+        
+        lines.forEach(line => {
+            const parts = line.split(',');
+            if (parts.length === 2) {
+                const key = parts[0].trim();
+                const value = parseFloat(parts[1].trim());
+
+                if (key === '영업이익') operatingProfit = value;
+                if (key === '감가상각비') depreciation = value;
+                if (key === '자본적지출') capex = value;
+                if (key === '순운전자본') nwc = value;
+            }
+        });
+
+        // 추출된 데이터를 FCF 계산 입력 필드에 자동 입력
+        document.getElementById('operating-profit').value = operatingProfit;
+        document.getElementById('depreciation').value = depreciation;
+        document.getElementById('capex').value = capex;
+        document.getElementById('nwc').value = nwc;
+
+        alert("재무제표 데이터가 성공적으로 로드되었습니다. FCF 계산 버튼을 눌러주세요.");
+    };
+    reader.readAsText(file);
+}
+
+function calculateFCF() {
+    const operatingProfit = parseFloat(document.getElementById('operating-profit').value) || 0;
+    const depreciation = parseFloat(document.getElementById('depreciation').value) || 0;
+    const taxes = parseFloat(document.getElementById('taxes').value) / 100 || 0;
+    const capex = parseFloat(document.getElementById('capex').value) || 0;
+    const nwc = parseFloat(document.getElementById('nwc').value) || 0;
+
+    const ebit = operatingProfit;
+    const nopat = ebit * (1 - taxes);
+    const fcf = nopat + depreciation - capex - nwc;
+
+    document.getElementById('fcf-value').textContent = formatCurrency(fcf);
+    
+    // 계산된 FCF 값을 1년차 현금흐름 필드에 자동으로 채우기
+    document.getElementById('cf-1').value = fcf;
+}
+
+function calculateDCF() {
+    const cashFlowInputs = document.querySelectorAll('.cash-flow-input');
+    const wacc = parseFloat(document.getElementById('wacc').value) / 100;
+    const growthRate = parseFloat(document.getElementById('growth-rate').value) / 100;
+    const shares = parseFloat(document.getElementById('shares').value);
+
+    let discountedCashFlows = 0;
+    const cashFlows = Array.from(cashFlowInputs).map(input => parseFloat(input.value) || 0);
+    
+    for (let i = 0; i < cashFlows.length; i++) {
+        discountedCashFlows += cashFlows[i] / Math.pow(1 + wacc, i + 1);
+    }
+    
+    const terminalValue = (cashFlows[cashFlows.length - 1] * (1 + growthRate)) / (wacc - growthRate);
+    const discountedTerminalValue = terminalValue / Math.pow(1 + wacc, cashFlows.length);
+
+    const enterpriseValue = discountedCashFlows + discountedTerminalValue;
+    const equityValue = enterpriseValue;
+    const perShareValue = equityValue / shares;
+
+    document.getElementById('enterprise-value').textContent = formatCurrency(enterpriseValue);
+    document.getElementById('equity-value').textContent = formatCurrency(equityValue);
+    document.getElementById('per-share-value').textContent = formatCurrency(perShareValue);
+}
+
+function formatCurrency(amount) {
+    if (isNaN(amount) || !isFinite(amount)) {
+        return '₩0';
+    }
+    return '₩' + new Intl.NumberFormat('ko-KR').format(Math.round(amount));
+}
+  </script>
+</body>
+</html>
